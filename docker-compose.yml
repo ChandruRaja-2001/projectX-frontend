@@ -1,0 +1,14 @@
+services:
+  lyaproperties-frontend:
+    build: 
+      context: .
+    ports:
+      - '9002:9002'
+    environment:
+      - COMPOSE_PROJECT_NAME=lyaproperties-frontend
+      - NODE_ENV=production
+      - APP_URL=http://localhost:9002
+      - APP_MODE=dev
+      - PORT=9002
+      - HOSTNAME=0.0.0.0
+      

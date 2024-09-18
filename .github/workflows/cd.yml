@@ -1,0 +1,45 @@
+name: CD
+
+on:
+  push:
+    branches: ["production"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy the next app to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_SKJ_HOST }}
+          username: ${{ secrets.VPS_SKJ_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # Authenticate git with SSH
+            eval "$(ssh-agent -s)"
+            ssh-add /home/docker/sshkeycicd-frontend
+            chmod 600 /home/docker/sshkeycicd-frontend
+
+            if [ ! -f ~/.ssh/known_hosts ]; then
+              ssh-keyscan github.com >> ~/.ssh/known_hosts
+            fi  
+
+            # Set global domain for Git repo
+            git config --global url."git@github.com:".insteadOf "https://github.com/"
+
+            cd ./lyaproperties-frontend
+
+            # Remove existing docker container and images
+            docker-compose down
+            docker image prune -a -f
+
+            cd ../
+
+            rm -r -f ./lyaproperties-frontend
+
+            git clone git@github.com:YurikTechDev/lya-properties-frontend-nextjs.git ./lyaproperties-frontend
+
+            cd lyaproperties-frontend          
+
+            docker compose up --build -d
